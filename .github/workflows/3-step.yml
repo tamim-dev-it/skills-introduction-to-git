@@ -79,7 +79,22 @@ jobs:
             console.log(`Previous HEAD: ${previous_head}`);
             console.log(`New HEAD: ${new_head}`);
             console.log(`Branch Name: ${branch_name}`);
-            // (check pending)
+
+            if (branch_name !== "main") {
+              throw new Error(`Expected to return to main, but current branch is '${branch_name}'.`);
+            }
+            if (!previous_head || !new_head) {
+              throw new Error("Checkout payload did not include both HEAD values.");
+            }
+            if (previous_head === new_head) {
+              throw new Error("HEAD did not change during checkout.");
+            }
+
+            const { execFileSync } = require("child_process");
+            const latest_head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+            if (new_head !== latest_head) {
+              throw new Error("Returned HEAD is not the latest commit.");
+            }
 
       - name: Update comment - step results
         uses: GrantBirki/comment@v2.1.1
